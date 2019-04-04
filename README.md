@@ -49,7 +49,15 @@ This is a *batch focused* module and covers building blocks of standing up a dat
 
 ## 3. Module 3 - Data Science Workshop
 
-This is a SparkML and Azure Machine Learning services
+There are two versions of the Data Science Workshop - the one using Scala will show Spark MLLib models. The PySpark version will show Spark ML and Azure Machine Learning services working together.
+
+If you would like to run Module 3 as standalone, you'll need to:
+1. Provision:
+    1. Azure Databricks
+    1. Azure Storage account
+    1. Azure Machine Learning services Workspace
+1. Import the [DBC file](./dbc/03-Data-Science.dbc) into the Databricks workspace
+1. Set the `module_3_only` flag in [99-Shared-Functions-and-Settings](/code/03-Data-Science/pyspark/99-Shared-Functions-and-Settings.py) to `True`
 
 The following is a summary of content covered:
 
