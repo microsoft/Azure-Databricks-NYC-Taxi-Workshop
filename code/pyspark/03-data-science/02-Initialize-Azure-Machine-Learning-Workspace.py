@@ -40,7 +40,7 @@ ws = Workspace(**AZURE_ML_CONF, auth=up)
 
 # If you need to create a new Azure Machine Learning workspace, you can do that via the SDK.
 
-# ws = Workspace.create(**AZURE_ML_CONF, location='eastus2', exist_ok=True)
+# ws = Workspace.create(**AZURE_ML_CONF, location=AZURE_REGION, exist_ok=True)
 
 # COMMAND ----------
 

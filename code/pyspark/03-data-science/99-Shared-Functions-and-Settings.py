@@ -2,9 +2,13 @@
 # Shared settings
 user_name = None # Should only contain alpha-numeric and underscores
 
+# Names are used here to prevent collisions if users are in the same Databrick workspace or AML Workspace
 model_dataset_name = 'model_dataset_{0}'.format(user_name)
 pyspark_experiment_name = 'pyspark_taxi_duration_{0}'.format(user_name)
 automl_experiment_name = 'automl_taxi_duration_{0}'.format(user_name)
+
+# Set this to True if you are running the ML Lab only
+module_3_only = False
 
 if not user_name:
   raise AttributeError("You must enter a unique user name for this workshop. " 
@@ -29,6 +33,18 @@ AZURE_ML_CONF = {'subscription_id': None, # Delete 'None' and enter your subscri
 # To find your Azure Subscription ID, you can navigate to [https://portal.azure.com](https://portal.azure.com), then follow the link below to see an animation on where to find it.
 
 # https://github.com/Microsoft/Azure-Databricks-NYC-Taxi-Workshop/raw/master/images/8-machine-learning/3-find-azure-subscription.gif
+
+# COMMAND ----------
+
+### Creating taxi_trips_mat_view if not exists AND module_3_only is set to True
+
+# COMMAND ----------
+
+# Check if the taxi_trips_mat_view table exists in the taxi_db database
+mat_view_exists = "taxi_trips_mat_view" in sqlContext.tableNames('taxi_db')
+if module_3_only and not mat_view_exists:
+  print("Running ML-Module-Only-Prep-Data Notebook. This should happen once per Databricks workspace if you are not running the Data Engineering portion of the lab.")
+  dbutils.notebook.run('./utils/ML-Module-Only-Prep-Data', timeout_seconds=240)
 
 # COMMAND ----------
 
@@ -94,7 +110,12 @@ def plot_residuals(scored_data, target="duration_minutes", prediction='predictio
 
 # COMMAND ----------
 
-def get_train_test_valid_data(table_name='global_temp.{0}'.format(model_dataset_name), randomSeed=35092, splits=[.005, .001, .001, .993]):
+if module_3_only:
+  split_defaults = [.8, .1, .1]
+else:
+  split_defaults = [.005, .001, .001, .993] 
+  
+def get_train_test_valid_data(table_name='global_temp.{0}'.format(model_dataset_name), randomSeed=35092, splits=split_defaults):
   tripData = spark.read.table(table_name)
 
   
@@ -104,3 +125,20 @@ def get_train_test_valid_data(table_name='global_temp.{0}'.format(model_dataset_
   
   # return the first 3 dataframes
   return df_splits[:3]
+
+# COMMAND ----------
+
+# MAGIC %scala
+# MAGIC def getAzureRegion():String = {
+# MAGIC   import com.databricks.backend.common.util.Project
+# MAGIC   import com.databricks.conf.trusted.ProjectConf
+# MAGIC   import com.databricks.backend.daemon.driver.DriverConf
+# MAGIC   
+# MAGIC   new DriverConf(ProjectConf.loadLocalConfig(Project.Driver)).region
+# MAGIC }
+# MAGIC 
+# MAGIC spark.conf.set("azure.databricks.region", getAzureRegion())
+
+# COMMAND ----------
+
+AZURE_REGION = spark.conf.get("azure.databricks.region")

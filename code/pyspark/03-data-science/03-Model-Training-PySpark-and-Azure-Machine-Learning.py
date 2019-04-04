@@ -199,95 +199,94 @@ evaluator = RegressionEvaluator(labelCol='duration_minutes')
 
 # COMMAND ----------
 
-run = experiment.start_logging()
+with experiment.start_logging() as run:
 
-print("==============================================")
-print("                  RUN STATUS                  ")
-print("==============================================")
+  print("==============================================")
+  print("                  RUN STATUS                  ")
+  print("==============================================")
 
-#######################
-# SET HYPERPARAMETERS #
-#######################
+  #######################
+  # SET HYPERPARAMETERS #
+  #######################
 
-model_name = 'LinearRegression'
-maxIters = 10
-regParam = 0.5
+  model_name = 'LinearRegression'
+  maxIters = 10
+  regParam = 0.5
 
-#######################
-# LOG HYPERPARAMETERS #
-#######################
+  #######################
+  # LOG HYPERPARAMETERS #
+  #######################
 
-run.log("Model Name", model_name)
-run.log("Max Iterations", maxIters)
-run.log("Regularization Rate", regParam)
-run.log_list("Feature Columns", feature_cols)
+  run.log("Model Name", model_name)
+  run.log("Max Iterations", maxIters)
+  run.log("Regularization Rate", regParam)
+  run.log_list("Feature Columns", feature_cols)
 
-###############
-# TRAIN MODEL #
-###############
+  ###############
+  # TRAIN MODEL #
+  ###############
 
-print("  * Training {0} model".format(model_name))
-# Instantiate New LinearRegression Object
-lr = LinearRegression(featuresCol='features', labelCol='duration_minutes', maxIter=maxIters, regParam=regParam, solver="auto")
+  print("  * Training {0} model".format(model_name))
+  # Instantiate New LinearRegression Object
+  lr = LinearRegression(featuresCol='features', labelCol='duration_minutes', maxIter=maxIters, regParam=regParam, solver="auto")
 
-# Train model on transformed training data
-lr_model = lr.fit(trainDF_transformed)
+  # Train model on transformed training data
+  lr_model = lr.fit(trainDF_transformed)
 
-lr_full_model = feature_model.copy()
-lr_full_model.stages.append(lr_model)
+  lr_full_model = feature_model.copy()
+  lr_full_model.stages.append(lr_model)
 
-print("  * Model trained, scoring validation data")
-# Run the full model (feature steps and trained model)
-validation_scored = lr_full_model.transform(validDF)
+  print("  * Model trained, scoring validation data")
+  # Run the full model (feature steps and trained model)
+  validation_scored = lr_full_model.transform(validDF)
 
-#####################
-# MODEL PERFORMANCE #
-#####################
+  #####################
+  # MODEL PERFORMANCE #
+  #####################
 
-print("  * Calculating performance metrics")
-# Calculate Regression Performance
-rmse = evaluator.evaluate(validation_scored, {evaluator.metricName: "rmse"})
-r2 = evaluator.evaluate(validation_scored, {evaluator.metricName: "r2"})
-nrmse = rmse / valid_stddev
+  print("  * Calculating performance metrics")
+  # Calculate Regression Performance
+  rmse = evaluator.evaluate(validation_scored, {evaluator.metricName: "rmse"})
+  r2 = evaluator.evaluate(validation_scored, {evaluator.metricName: "r2"})
+  nrmse = rmse / valid_stddev
 
-###################
-# LOG PERFORMANCE #
-###################
+  ###################
+  # LOG PERFORMANCE #
+  ###################
 
-print("  * Logging performance metrics")
-# Log Performance
-run.log('RMSE', rmse)
-run.log("R2", r2)
-run.log("NRMSE", nrmse)
+  print("  * Logging performance metrics")
+  # Log Performance
+  run.log('RMSE', rmse)
+  run.log("R2", r2)
+  run.log("NRMSE", nrmse)
 
-##########################
-# GENERATE RESIDUAL PLOT #
-##########################
+  ##########################
+  # GENERATE RESIDUAL PLOT #
+  ##########################
 
-print("  * Generating residual plot")
-# Plot residual and add to Azure ML Experiment
-resid_plot = plot_residuals(validation_scored)
+  print("  * Generating residual plot")
+  # Plot residual and add to Azure ML Experiment
+  resid_plot = plot_residuals(validation_scored)
 
-print("  * Logging residual plot")
-run.log_image("Residual Plot", plot=resid_plot)
+  print("  * Logging residual plot")
+  run.log_image("Residual Plot", plot=resid_plot)
 
-######################
-# PERSIST MODEL DATA #
-######################
-print("  * Persisting model to Azure Machine Learning")
-model_name = "LinearRegressionModel"
-model_zip = model_name + ".zip"
-model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
+  ######################
+  # PERSIST MODEL DATA #
+  ######################
+  print("  * Persisting model to Azure Machine Learning")
+  model_name = "LinearRegressionModel"
+  model_zip = model_name + ".zip"
+  model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
 
-lr_full_model.save(os.path.join("/tmp/", user_name, model_name))
-shutil.make_archive(model_name, 'zip', model_local_dbfs)
-run.upload_file("outputs/{0}".format(model_zip), model_zip)
+  lr_full_model.save(os.path.join("/tmp/", user_name, model_name))
+  shutil.make_archive(model_name, 'zip', model_local_dbfs)
+  run.upload_file("outputs/{0}".format(model_zip), model_zip)
 
 # Delete saved models on cluster - since they're in Azure Machine Learning
 shutil.rmtree(model_local_dbfs)
 os.remove(model_zip)
 
-run.complete()
 
 # Display Information In This Notebook
 print()
@@ -312,102 +311,100 @@ display(resid_plot)
 
 # COMMAND ----------
 
-run = experiment.start_logging()
+with experiment.start_logging() as run:
 
-print("==============================================")
-print("                  RUN STATUS                  ")
-print("==============================================")
+  print("==============================================")
+  print("                  RUN STATUS                  ")
+  print("==============================================")
 
-#######################
-# SET HYPERPARAMETERS #
-#######################
+  #######################
+  # SET HYPERPARAMETERS #
+  #######################
 
-random_seed = 25706
+  random_seed = 25706
 
-model_name = 'RandomForestRegressor'
-maxDepth = 11
-maxBins = 45
-numTrees = 20
-subsamplingRate = 0.3
+  model_name = 'RandomForestRegressor'
+  maxDepth = 11
+  maxBins = 45
+  numTrees = 20
+  subsamplingRate = 0.3
 
-#######################
-# LOG HYPERPARAMETERS #
-#######################
+  #######################
+  # LOG HYPERPARAMETERS #
+  #######################
 
-run.log("Random Seed", random_seed)
-run.log("Model Name", model_name)
-run.log("Max Depth", maxDepth)
-run.log("Max Bins", maxBins)
-run.log("Number of Trees", numTrees)
-run.log('Subsampling Rate', subsamplingRate)
-run.log_list("Feature Columns", feature_cols)
+  run.log("Random Seed", random_seed)
+  run.log("Model Name", model_name)
+  run.log("Max Depth", maxDepth)
+  run.log("Max Bins", maxBins)
+  run.log("Number of Trees", numTrees)
+  run.log('Subsampling Rate', subsamplingRate)
+  run.log_list("Feature Columns", feature_cols)
 
-###############
-# TRAIN MODEL #
-###############
+  ###############
+  # TRAIN MODEL #
+  ###############
 
-print("  * Training {0} model".format(model_name))
-# Instantiate New RandomForestRegressor Object
-rf = RandomForestRegressor(labelCol='duration_minutes', maxDepth=maxDepth, maxBins=maxBins, impurity='variance', 
-                           subsamplingRate=1.0, seed=random_seed, numTrees=numTrees, featureSubsetStrategy='auto')
+  print("  * Training {0} model".format(model_name))
+  # Instantiate New RandomForestRegressor Object
+  rf = RandomForestRegressor(labelCol='duration_minutes', maxDepth=maxDepth, maxBins=maxBins, impurity='variance', 
+                             subsamplingRate=1.0, seed=random_seed, numTrees=numTrees, featureSubsetStrategy='auto')
 
-# Train model on transformed training data
-rf_model = rf.fit(trainDF_transformed)
+  # Train model on transformed training data
+  rf_model = rf.fit(trainDF_transformed)
 
-rf_full_model = feature_model.copy()
-rf_full_model.stages.append(rf_model)
+  rf_full_model = feature_model.copy()
+  rf_full_model.stages.append(rf_model)
 
-print("  * Model trained, scoring validation data")
-# Run the full model (feature steps and trained model)
-validation_scored = rf_full_model.transform(validDF)
+  print("  * Model trained, scoring validation data")
+  # Run the full model (feature steps and trained model)
+  validation_scored = rf_full_model.transform(validDF)
 
-#####################
-# MODEL PERFORMANCE #
-#####################
+  #####################
+  # MODEL PERFORMANCE #
+  #####################
 
-print("  * Calculating performance metrics")
-# Calculate Regression Performance
-rmse = evaluator.evaluate(validation_scored, {evaluator.metricName: "rmse"})
-r2 = evaluator.evaluate(validation_scored, {evaluator.metricName: "r2"})
-nrmse = rmse / valid_stddev
+  print("  * Calculating performance metrics")
+  # Calculate Regression Performance
+  rmse = evaluator.evaluate(validation_scored, {evaluator.metricName: "rmse"})
+  r2 = evaluator.evaluate(validation_scored, {evaluator.metricName: "r2"})
+  nrmse = rmse / valid_stddev
 
-###################
-# LOG PERFORMANCE #
-###################
+  ###################
+  # LOG PERFORMANCE #
+  ###################
 
-print("  * Logging performance metrics")
-run.log('RMSE', rmse)
-run.log("R2", r2)
-run.log("NRMSE", nrmse)
+  print("  * Logging performance metrics")
+  run.log('RMSE', rmse)
+  run.log("R2", r2)
+  run.log("NRMSE", nrmse)
 
-##########################
-# GENERATE RESIDUAL PLOT #
-##########################
+  ##########################
+  # GENERATE RESIDUAL PLOT #
+  ##########################
 
-print("  * Generating residual plot")
-# Plot residual and add to Azure ML Experiment
-resid_plot = plot_residuals(validation_scored)
+  print("  * Generating residual plot")
+  # Plot residual and add to Azure ML Experiment
+  resid_plot = plot_residuals(validation_scored)
 
-print("  * Logging residual plot")
-run.log_image("Residual Plot", plot=resid_plot)
+  print("  * Logging residual plot")
+  run.log_image("Residual Plot", plot=resid_plot)
 
-######################
-# PERSIST MODEL DATA #
-######################
-print("  * Persisting model to Azure Machine Learning")
-model_name = "RandomForestRegressionModel"
-model_zip = model_name + ".zip"
-model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
+  ######################
+  # PERSIST MODEL DATA #
+  ######################
+  print("  * Persisting model to Azure Machine Learning")
+  model_name = "RandomForestRegressionModel"
+  model_zip = model_name + ".zip"
+  model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
 
-rf_full_model.save(os.path.join("/tmp/", user_name, model_name))
-shutil.make_archive(model_name, 'zip', model_local_dbfs)
-run.upload_file("outputs/{0}".format(model_zip), model_zip)
+  rf_full_model.save(os.path.join("/tmp/", user_name, model_name))
+  shutil.make_archive(model_name, 'zip', model_local_dbfs)
+  run.upload_file("outputs/{0}".format(model_zip), model_zip)
 
-# Delete saved models on cluster - since they're in Azure Machine Learning
-shutil.rmtree(model_local_dbfs)
-os.remove(model_zip)
-
-run.complete()
+  # Delete saved models on cluster - since they're in Azure Machine Learning
+  shutil.rmtree(model_local_dbfs)
+  os.remove(model_zip)
 
 # Display Information In This Notebook
 print()
@@ -436,97 +433,95 @@ display(resid_plot)
 
 # COMMAND ----------
 
-run = experiment.start_logging()
+with experiment.start_logging() as run:
 
-random_seed = 25706
+  random_seed = 25706
 
-model_name = 'GBTRegressor'
+  model_name = 'GBTRegressor'
 
-###############
-##   TODO    ##
-###############
-run.log_list("Columns", trainDF_transformed.columns)
-# Log Hyperparameters
+  ###############
+  ##   TODO    ##
+  ###############
+  run.log_list("Columns", trainDF_transformed.columns)
+  # Log Hyperparameters
 
-print("Training {0} model".format(model_name))
+  print("Training {0} model".format(model_name))
 
-# Instantiate New GBTRegressor Object
-
-
-# Train model on transformed training data
+  # Instantiate New GBTRegressor Object
 
 
-###############
-## END TODO  ##
-###############
-
-print("Model trained, scoring validation data")
-
-###############
-##   TODO    ##
-###############
-
-# Add trained model to Overall pipeline
+  # Train model on transformed training data
 
 
-# Score model against validation data
+  ###############
+  ## END TODO  ##
+  ###############
 
-validation_scored = 
+  print("Model trained, scoring validation data")
 
-###############
-## END TODO  ##
-###############
+  ###############
+  ##   TODO    ##
+  ###############
+
+  # Add trained model to Overall pipeline
 
 
-print("Calculating performance metrics")
-# Calculate Regression Performance
-rmse = evaluator.evaluate(validation_scored, {evaluator.metricName: "rmse"})
-r2 = evaluator.evaluate(validation_scored, {evaluator.metricName: "r2"})
-nrmse = rmse / valid_stddev
+  # Score model against validation data
 
-print("Logging performance metrics")
-# Log Performance
+  validation_scored = 
 
-###############
-##   TODO    ##
-###############
+  ###############
+  ## END TODO  ##
+  ###############
 
-# Log RMSE, R2 and NRMSE to Azure ML Workspace
 
-###############
-## END TODO  ##
-###############
+  print("Calculating performance metrics")
+  # Calculate Regression Performance
+  rmse = evaluator.evaluate(validation_scored, {evaluator.metricName: "rmse"})
+  r2 = evaluator.evaluate(validation_scored, {evaluator.metricName: "r2"})
+  nrmse = rmse / valid_stddev
 
-print("Generating residual plot")
-# Plot residual and add to Azure ML Experiment
-resid_plot = plot_residuals(validation_scored)
+  print("Logging performance metrics")
+  # Log Performance
 
-print("Logging residual plot")
-run.log_image("Residual Plot", plot=resid_plot)
+  ###############
+  ##   TODO    ##
+  ###############
 
-#Persist
-print("  * Persisting model to Azure Machine Learning")
-model_name = "GBTRegressionModel"
-model_zip = model_name + ".zip"
-model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
+  # Log RMSE, R2 and NRMSE to Azure ML Workspace
 
-###############
-##   TODO    ##
-###############
-[ENTER MODEL NAME HERE].save(os.path.join("/tmp/", user_name, model_name))
+  ###############
+  ## END TODO  ##
+  ###############
 
-###############
-## END TODO  ##
-###############
+  print("Generating residual plot")
+  # Plot residual and add to Azure ML Experiment
+  resid_plot = plot_residuals(validation_scored)
 
-shutil.make_archive(model_name, 'zip', model_local_dbfs)
-run.upload_file("outputs/{0}".format(model_zip), model_zip)
+  print("Logging residual plot")
+  run.log_image("Residual Plot", plot=resid_plot)
 
-# Delete saved models on cluster - since they're in Azure Machine Learning
-shutil.rmtree(model_local_dbfs)
-os.remove(model_zip)
+  #Persist
+  print("  * Persisting model to Azure Machine Learning")
+  model_name = "GBTRegressionModel"
+  model_zip = model_name + ".zip"
+  model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
 
-run.complete()
+  ###############
+  ##   TODO    ##
+  ###############
+  [ENTER MODEL NAME HERE].save(os.path.join("/tmp/", user_name, model_name))
+
+  ###############
+  ## END TODO  ##
+  ###############
+
+  shutil.make_archive(model_name, 'zip', model_local_dbfs)
+  run.upload_file("outputs/{0}".format(model_zip), model_zip)
+
+  # Delete saved models on cluster - since they're in Azure Machine Learning
+  shutil.rmtree(model_local_dbfs)
+  os.remove(model_zip)
 
 # Display Information In This Notebook
 print()
