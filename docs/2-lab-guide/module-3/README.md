@@ -10,4 +10,4 @@ In order to run this module seperately, you can set the `module_3_only` flag in 
 
 ## Module Setup
 
-After loading the DBC file into your workspace, you must edit [99-Shared-Functions-and-Settings](../../../code/03-Data-Science/pyspark/99-Shared-Functions-and-Settings.py) to 
+After loading the DBC file into your workspace, you must edit [99-Shared-Functions-and-Settings](../../../code/03-Data-Science/pyspark/99-Shared-Functions-and-Settings.py) to update username and Azure Machine Learning workspace settings.
