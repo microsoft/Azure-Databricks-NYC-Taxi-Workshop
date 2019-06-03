@@ -193,6 +193,24 @@ evaluator = RegressionEvaluator(labelCol='duration_minutes')
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC #### `.amlignore` file
+# MAGIC 
+# MAGIC By default, Azure Machine Learning will take a snapshot of the current working directory - to capture the code building the model. However, i Databricks, the working directory is `/databricks/driver` which doesn't have any of the code. This directory has several different log files and can occasionally get over 300 MB (which is the max size for snapshots). 
+# MAGIC 
+# MAGIC To get around that, we'll create an `.amlignore` file - which will exclude files from the snapshot (like `.gitignore`)
+
+# COMMAND ----------
+
+# MAGIC %%writefile .amlignore
+# MAGIC logs/
+# MAGIC derby.log
+# MAGIC conf/
+# MAGIC ganglia/
+# MAGIC eventlogs/
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ### Linear Regression Model
 # MAGIC The first model that we'll try is a Linear Regression model. 
@@ -275,7 +293,7 @@ with experiment.start_logging() as run:
   # PERSIST MODEL DATA #
   ######################
   print("  * Persisting model to Azure Machine Learning")
-  model_name = "LinearRegressionModel"
+  model_name = "model"
   model_zip = model_name + ".zip"
   model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
 
@@ -394,7 +412,7 @@ with experiment.start_logging() as run:
   # PERSIST MODEL DATA #
   ######################
   print("  * Persisting model to Azure Machine Learning")
-  model_name = "RandomForestRegressionModel"
+  model_name = "model"
   model_zip = model_name + ".zip"
   model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
 
@@ -503,7 +521,7 @@ with experiment.start_logging() as run:
 
   #Persist
   print("  * Persisting model to Azure Machine Learning")
-  model_name = "GBTRegressionModel"
+  model_name = "model"
   model_zip = model_name + ".zip"
   model_local_dbfs = os.path.join("/dbfs/tmp/",  user_name, model_name)
 
