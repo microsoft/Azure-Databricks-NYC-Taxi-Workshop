@@ -87,7 +87,7 @@ display(run_results[['id', 'RMSE', 'R2']])
 
 # COMMAND ----------
 
-best_run_id = '05936147-1110-4a49-8bd8-5b11662cd945'
+best_run_id = '6d670807-6477-4ea6-a98b-84069c888346'
 best_run = Run(experiment, best_run_id)
 
 # COMMAND ----------
@@ -106,7 +106,7 @@ best_run.get_file_names()
 import shutil
 import os
 
-saved_model_name = 'LinearRegressionModel.zip' # Saved model filename in AML Service - leave out the 'outputs/' folder at the beginning
+saved_model_name = 'model.zip' # Saved model filename in AML Service - leave out the 'outputs/' folder at the beginning
 aml_location = 'outputs/{0}'.format(saved_model_name)
 
 user_folder = '/dbfs/tmp/{0}/'.format(user_name)
@@ -144,16 +144,20 @@ shutil.unpack_archive(os.path.join(temporary_zip_path, saved_model_name), tempor
 
 # COMMAND ----------
 
+import os
+# Change the current working directory to the `user_folder`
+os.chdir(user_folder)
+
 from azureml.core.model import Model
 
 registered_model_name = 'duration_prediction_{0}'.format(user_name)
 
 model = Model.register(workspace=ws, 
-                       model_path=temporary_model_path,
+                       model_path='./trained_model',
                        model_name=registered_model_name,
                        description='Predict NYC Taxi Trip duration given distance and other metrics',
-                       tags={'model_framework': 'PySpark',
-                             'model_type': saved_model_name.split('.')[0]})
+                       tags={'model_framework': 'PySpark'}
+                      )
 
 # COMMAND ----------
 
@@ -439,4 +443,5 @@ print(result_set.json())
 
 # COMMAND ----------
 
-experiment.
+# Delete service - this will free up any ACI resources
+# aci_service.delete()
