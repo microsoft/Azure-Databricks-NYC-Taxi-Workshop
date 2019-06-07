@@ -41,7 +41,13 @@ AZURE_ML_CONF = {'subscription_id': None, # Delete 'None' and enter your subscri
 # COMMAND ----------
 
 # Check if the taxi_trips_mat_view table exists in the taxi_db database
-mat_view_exists = "taxi_trips_mat_view" in sqlContext.tableNames('taxi_db')
+from pyspark.sql.utils import AnalysisException
+
+try:
+  mat_view_exists = "taxi_trips_mat_view" in sqlContext.tableNames('taxi_db')
+except AnalysisException:
+  mat_view_exists = False
+
 if module_3_only and not mat_view_exists:
   print("Running ML-Module-Only-Prep-Data Notebook. This should happen once per Databricks workspace if you are not running the Data Engineering portion of the lab.")
   dbutils.notebook.run('./utils/ML-Module-Only-Prep-Data', timeout_seconds=240)
