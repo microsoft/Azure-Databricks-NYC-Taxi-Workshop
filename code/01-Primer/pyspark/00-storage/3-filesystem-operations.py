@@ -1,16 +1,16 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # File System Operations
-# MAGIC 
+# MAGIC
 # MAGIC ### What's in this exercise?
-# MAGIC 
+# MAGIC
 # MAGIC 101 on working with databricks file system (DBFS) backed by Azure blob storage
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC # 1.0. Azure Blob Storage
-# MAGIC 
+# MAGIC
 # MAGIC In the previous section, we mounted blob storage, we will use the scratch directory for this exercise.
 # MAGIC The following are covered-
 # MAGIC 1.  Create a directory

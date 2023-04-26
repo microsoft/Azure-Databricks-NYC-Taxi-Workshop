@@ -1,15 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Databricks Delta - primer
-# MAGIC 
+# MAGIC
 # MAGIC ### What's in this exercise?
 # MAGIC In this exercise, we will complete the following in **batch** (streaming covered in the event hub primer):<br>
-# MAGIC 1.  Create a dataset, persist in Delta format to DBFS backed by Azure Blob Storage, create a Delta table on top of the dataset<br>
+# MAGIC 1.  Create a dataset, persist in Delta format to DBFS backed by S3 Blob Storage, create a Delta table on top of the dataset<br>
 # MAGIC 2.  Update one or two random records<br>
 # MAGIC 3.  Delete one or two records<br>
 # MAGIC 4.  Add a couple new columns to the data and understand considerations for schema evolution<br>
 # MAGIC 4.  Discuss Databricks Delta's value proposition, and positioning in your big data architecture<br>
-# MAGIC 
+# MAGIC
 # MAGIC References:
 # MAGIC https://docs.azuredatabricks.net/delta/index.html<br>
 
@@ -71,7 +71,7 @@ booksDF.write.format("delta").save(deltaTableDirectory)
 
 # MAGIC %sql
 # MAGIC CREATE DATABASE IF NOT EXISTS books_db;
-# MAGIC 
+# MAGIC
 # MAGIC USE books_db;
 # MAGIC DROP TABLE IF EXISTS books;
 # MAGIC CREATE TABLE books
@@ -87,6 +87,7 @@ booksDF.write.format("delta").save(deltaTableDirectory)
 
 # MAGIC  %md
 # MAGIC  #### 1.0.4. Performance optimization
+# MAGIC  
 # MAGIC  We will run the "OPTIMIZE" command to compact small files into larger for performance.
 # MAGIC  Note: The performance improvements are evident at scale
 
@@ -245,7 +246,7 @@ booksUpsertDF.createOrReplaceTempView("books_upserts")
 # MAGIC %sql
 # MAGIC --3) Execute upsert
 # MAGIC USE books_db;
-# MAGIC 
+# MAGIC
 # MAGIC MERGE INTO books
 # MAGIC USING books_upserts
 # MAGIC ON books.book_id = books_upserts.book_id
@@ -297,7 +298,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/books"))
 # MAGIC %sql
 # MAGIC --2) Execute delete
 # MAGIC USE books_db;
-# MAGIC 
+# MAGIC
 # MAGIC DELETE FROM books where book_pub_year >= 1900;
 
 # COMMAND ----------
@@ -387,7 +388,7 @@ booksNewColDF.write.format("delta").option("mergeSchema", "true").mode("overwrit
 
 # MAGIC %sql
 # MAGIC USE books_db;
-# MAGIC 
+# MAGIC
 # MAGIC DELETE FROM books where book_price is null;
 
 # COMMAND ----------
@@ -455,3 +456,15 @@ display(dbutils.fs.ls("/mnt/workshop/curated/delta/books-part"))
 
 # MAGIC %sql
 # MAGIC DESCRIBE HISTORY books_db.books;
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+

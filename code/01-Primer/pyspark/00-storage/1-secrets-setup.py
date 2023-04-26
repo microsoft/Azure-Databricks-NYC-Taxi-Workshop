@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Secure your storage key with Databricks secrets
-# MAGIC 
+# MAGIC
 # MAGIC Secrets allow you to secure your credentials, and reference in your code instead of hard-code.  Databricks automatically redacts secrets from being displayed in the notebook as cleartext.<BR>
 # MAGIC   
 # MAGIC **Pre-requisite**: You should have created your Azure Blob Storage account and ADLS Gen2 account.<br><br>

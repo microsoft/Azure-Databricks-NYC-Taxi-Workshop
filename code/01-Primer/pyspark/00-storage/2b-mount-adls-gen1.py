@@ -1,18 +1,18 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Mount ADLS Gen1
-# MAGIC 
+# MAGIC
 # MAGIC Mounting Azure storage in Azure Databricks allows you to access the cloud storage like they are directories.<BR>
 # MAGIC   
 # MAGIC ### What's in this exercise?
 # MAGIC The scope of this workshop is restricted to access via Service Principal and AAD based pass through authentication is out of scope.
 # MAGIC We will mount ADLSGen1 to Databricks in this module.<br>
-# MAGIC 
+# MAGIC
 # MAGIC To mount ADLS Gen 1 - we need a few pieces of information<br>
 # MAGIC 1.  Service principal - Application ID<br>
 # MAGIC 2.  Directory ID (AAD tenant ID)<br>
 # MAGIC 3.  Access tokey/key associated with the application ID<br>
-# MAGIC 
+# MAGIC
 # MAGIC We also need a directory created, and full access to the root directory and child items to the SPN from #1<br>
 # MAGIC The provisioning docs cover the steps - https://github.com/Microsoft/Azure-Databricks-NYC-Taxi-Workshop/blob/master//docs/1-provisioning-guide/ProvisioningGuide.md
 

@@ -1,16 +1,16 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Mount Azure Data Lake Store Gen2
-# MAGIC 
+# MAGIC
 # MAGIC Mounting Azure storage in Azure Databricks allows you to access the cloud storage like they are directories.<BR>
 # MAGIC   
 # MAGIC ### What's in this exercise?
 # MAGIC The scope of this workshop is restricted to access via Service Principal and AAD based pass through authentication is out of scope. We will mount ADLSGen2 to Databricks in this module.<BR>
-# MAGIC 
+# MAGIC
 # MAGIC #### Create ADLS Gen2 file system 
 # MAGIC To mount an ADLSGen2 file system, the ADLS filesystem should be created first.<BR>
 # MAGIC To create the ADLS file system, we need the storage account key.<BR>
-# MAGIC 
+# MAGIC
 # MAGIC   
 # MAGIC #### Mount an ADLS Gen2 file system 
 # MAGIC To mount an ADLS Gen2 file system, we need the following completed/the following information available.-<br>

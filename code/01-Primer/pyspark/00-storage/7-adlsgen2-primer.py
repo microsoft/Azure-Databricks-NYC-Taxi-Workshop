@@ -2,17 +2,17 @@
 # MAGIC %md
 # MAGIC # ADLS gen 2 - primer
 # MAGIC Azure Data Lake Storage Gen2 combines the capabilities of two existing storage services: Azure Data Lake Storage Gen1 features, such as file system semantics, file-level security and scale are combined with low-cost, tiered storage, high availability/disaster recovery capabilities, and a large SDK/tooling ecosystem from Azure Blob Storage.<br><br>
-# MAGIC 
+# MAGIC
 # MAGIC ### What's in this exercise?
 # MAGIC In the primer section, we created a file system and mounted it.  <br>
 # MAGIC We will complete the following in batch operations on DBFS-Hierarchical Name Space enabled ADLS Gen2:<br>
 # MAGIC 1.  Create a dataframe 
 # MAGIC 2.  Persist to ADLS Gen2 as parquet; create external table and run queries<br>
-# MAGIC 
+# MAGIC
 # MAGIC DELTA is not supported yet with ADLS Gen2 yet and therefore not covered;<br>DBFS support is available.<br>
-# MAGIC 
+# MAGIC
 # MAGIC Ensure you on DBR 5.1 or above<br>
-# MAGIC 
+# MAGIC
 # MAGIC References:<br>
 # MAGIC ADLS Gen2 product page:https://docs.microsoft.com/en-us/azure/storage/data-lake-storage/using-databricks-spark<br>
 # MAGIC Databricks ADLS Gen2 integration: https://docs.azuredatabricks.net/spark/latest/data-sources/azure/azure-datalake-gen2.html
@@ -84,7 +84,7 @@ display(dbutils.fs.ls(destDirectoryRoot))
 # MAGIC %sql
 # MAGIC CREATE DATABASE IF NOT EXISTS books_db_adlsgen2;
 # MAGIC USE books_db_adlsgen2;
-# MAGIC 
+# MAGIC
 # MAGIC DROP TABLE IF EXISTS books_prq;
 # MAGIC CREATE TABLE books_prq
 # MAGIC USING parquet
@@ -96,4 +96,5 @@ display(dbutils.fs.ls(destDirectoryRoot))
 # MAGIC select * from books_db_adlsgen2.books_prq;
 
 # COMMAND ----------
+
 

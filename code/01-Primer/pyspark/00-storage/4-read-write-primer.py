@@ -104,16 +104,16 @@ display(dbutils.fs.ls(dbfsDestDirPath))
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC 
+# MAGIC
 # MAGIC CREATE DATABASE IF NOT EXISTS CRIMES_DB;
-# MAGIC 
+# MAGIC
 # MAGIC USE CRIMES_DB;
-# MAGIC 
+# MAGIC
 # MAGIC DROP TABLE IF EXISTS chicago_crimes_raw;
 # MAGIC CREATE TABLE IF NOT EXISTS chicago_crimes_raw
 # MAGIC USING parquet
 # MAGIC OPTIONS (path "/mnt/workshop/raw/crimes/chicago-crimes");
-# MAGIC 
+# MAGIC
 # MAGIC ANALYZE TABLE chicago_crimes_raw COMPUTE STATISTICS;
 
 # COMMAND ----------
@@ -127,7 +127,7 @@ display(dbutils.fs.ls(dbfsDestDirPath))
 # MAGIC USE crimes_db;
 # MAGIC --SELECT * FROM chicago_crimes_raw;
 # MAGIC SELECT count(*) FROM chicago_crimes_raw;
-# MAGIC 
+# MAGIC
 # MAGIC --6,701,049
 
 # COMMAND ----------
@@ -180,14 +180,14 @@ curatedDF.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfsDe
 
 # MAGIC %sql
 # MAGIC CREATE DATABASE IF NOT EXISTS CRIMES_DB;
-# MAGIC 
+# MAGIC
 # MAGIC USE CRIMES_DB;
-# MAGIC 
+# MAGIC
 # MAGIC DROP TABLE IF EXISTS chicago_crimes_curated;
 # MAGIC CREATE TABLE chicago_crimes_curated
 # MAGIC USING parquet
 # MAGIC OPTIONS (path "/mnt/workshop/curated/crimes/chicago-crimes");
-# MAGIC 
+# MAGIC
 # MAGIC MSCK REPAIR TABLE chicago_crimes_curated;
 # MAGIC ANALYZE TABLE chicago_crimes_curated COMPUTE STATISTICS;
 

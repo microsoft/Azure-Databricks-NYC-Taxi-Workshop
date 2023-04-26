@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Mount blob storage
-# MAGIC 
+# MAGIC
 # MAGIC Mounting blob storage containers in Azure Databricks allows you to access blob storage containers like they are directories.<BR>
 # MAGIC   
 # MAGIC ### What's in this exercise?
