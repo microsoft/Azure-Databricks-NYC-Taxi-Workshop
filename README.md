@@ -1,4 +1,6 @@
-# Azure Databricks NYC Taxi Workshop
+# AWS Databricks NYC Taxi Workshop
+
+*Adapted from Azure Databricks NYC Taxi Workshop*
 
 This is a multi-part (free) workshop featuring Azure Databricks. It covers basics of working with Azure Data Services from Spark on Databricks with Chicago crimes public dataset, followed by an end-to-end data engineering workshop with the NYC Taxi public dataset, and finally an end-to-end machine learning workshop.  The workshop is offered in Scala and Python.
 
