@@ -184,7 +184,8 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC use taxi_db;
+# MAGIC create schema nyctaxi_reference_data;
+# MAGIC use nyctaxi_reference_data;
 # MAGIC DROP TABLE IF EXISTS taxi_zone_lookup;
 # MAGIC CREATE TABLE IF NOT EXISTS taxi_zone_lookup(
 # MAGIC location_id STRING,
@@ -199,7 +200,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from taxi_db.taxi_zone_lookup;
+# MAGIC select * from nyctaxi_reference_data.taxi_zone_lookup;
 
 # COMMAND ----------
 
