@@ -97,15 +97,15 @@ curatedDF = sql("""
       second(t.dropoff_datetime) as dropoff_second
   from 
     taxi_db.green_taxi_trips_raw t
-    left outer join taxi_db.vendor_lookup v 
+    left outer join nyctaxi_reference_data.vendor_lookup v 
       on (t.vendor_id = v.vendor_id)
-    left outer join taxi_db.trip_type_lookup tt 
+    left outer join nyctaxi_reference_data.trip_type_lookup tt 
       on (t.trip_type = tt.trip_type)
-    left outer join taxi_db.trip_month_lookup tm 
+    left outer join nyctaxi_reference_data.trip_month_lookup tm 
       on (t.trip_month = tm.trip_month)
-    left outer join taxi_db.payment_type_lookup pt 
+    left outer join nyctaxi_reference_data.payment_type_lookup pt 
       on (t.payment_type = pt.payment_type)
-    left outer join taxi_db.rate_code_lookup rc 
+    left outer join nyctaxi_reference_data.rate_code_lookup rc 
       on (t.rate_code_id = rc.rate_code_id)
     left outer join nyctaxi_reference_data.taxi_zone_lookup tzpu 
       on (t.pickup_location_id = tzpu.location_id)

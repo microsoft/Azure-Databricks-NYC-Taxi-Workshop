@@ -219,7 +219,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # %sql
-# select * from taxi_db.trip_month_lookup;
+# select * from nyctaxi_reference_data.trip_month_lookup;
 
 # COMMAND ----------
 
@@ -237,7 +237,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # %sql
-# select * from taxi_db.rate_code_lookup;
+# select * from nyctaxi_reference_data.rate_code_lookup;
 
 # COMMAND ----------
 
@@ -256,7 +256,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # %sql
-# select * from taxi_db.payment_type_lookup;
+# select * from nyctaxi_reference_data.payment_type_lookup;
 
 # COMMAND ----------
 
@@ -274,7 +274,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # %sql
-# select * from taxi_db.trip_type_lookup;
+# select * from nyctaxi_reference_data.trip_type_lookup;
 
 # COMMAND ----------
 
@@ -293,4 +293,4 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # COMMAND ----------
 
 # %sql
-# select * from taxi_db.vendor_lookup;
+# select * from nyctaxi_reference_data.vendor_lookup;
