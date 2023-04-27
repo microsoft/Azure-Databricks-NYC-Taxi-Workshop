@@ -57,8 +57,8 @@ display(spark.catalog.listDatabases())
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DROP TABLE IF EXISTS taxi_db.BATCH_JOB_HISTORY;
-# MAGIC CREATE TABLE taxi_db.BATCH_JOB_HISTORY(
+# MAGIC DROP TABLE IF EXISTS ${nbvars.taxi_db}.BATCH_JOB_HISTORY;
+# MAGIC CREATE TABLE ${nbvars.taxi_db}.BATCH_JOB_HISTORY(
 # MAGIC batch_id int,
 # MAGIC batch_step_id int,
 # MAGIC batch_step_description varchar(100),
@@ -66,15 +66,15 @@ display(spark.catalog.listDatabases())
 # MAGIC batch_step_time varchar(30)
 # MAGIC );
 # MAGIC
-# MAGIC DROP TABLE IF EXISTS taxi_db.TRIPS_BY_YEAR;
-# MAGIC CREATE TABLE taxi_db.TRIPS_BY_YEAR(
+# MAGIC DROP TABLE IF EXISTS ${nbvars.taxi_db}.TRIPS_BY_YEAR;
+# MAGIC CREATE TABLE ${nbvars.taxi_db}.TRIPS_BY_YEAR(
 # MAGIC taxi_type varchar(30),
 # MAGIC trip_year int,
 # MAGIC trip_count bigint
 # MAGIC );
 # MAGIC
-# MAGIC DROP TABLE IF EXISTS taxi_db.TRIPS_BY_HOUR;
-# MAGIC CREATE TABLE taxi_db.TRIPS_BY_HOUR(
+# MAGIC DROP TABLE IF EXISTS ${nbvars.taxi_db}.TRIPS_BY_HOUR;
+# MAGIC CREATE TABLE ${nbvars.taxi_db}.TRIPS_BY_HOUR(
 # MAGIC taxi_type varchar(30),
 # MAGIC trip_year int,
 # MAGIC pickup_hour int,
