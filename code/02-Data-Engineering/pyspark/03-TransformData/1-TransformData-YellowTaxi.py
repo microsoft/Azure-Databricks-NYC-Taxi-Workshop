@@ -88,9 +88,9 @@ curatedDF = sql("""
       on (t.payment_type = case when t.trip_year < "2015" then pt.abbreviation else pt.payment_type end)
     left outer join taxi_db.rate_code_lookup rc 
       on (t.rate_code_id = rc.rate_code_id)
-    left outer join taxi_db.taxi_zone_lookup tzpu 
+    left outer join nyctaxi_reference_data.taxi_zone_lookup tzpu 
       on (t.pickup_location_id = tzpu.location_id)
-    left outer join taxi_db.taxi_zone_lookup tzdo 
+    left outer join nyctaxi_reference_data.taxi_zone_lookup tzdo 
       on (t.dropoff_location_id = tzdo.location_id)
   """)
 
