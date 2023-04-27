@@ -71,7 +71,7 @@ display(dbutils.fs.ls(dbfsDirPath))
 dbfsSrcDirPath="/mnt/workshop/staging/crimes/chicago-crimes"
 
 # 2) Destination directory
-dbfsDestDirPath="/mnt/workshop/raw/crimes/chicago-crimes"
+dbfs_dest_dir_path = "/mnt/workshop/raw/crimes/chicago-crimes"
 
 # COMMAND ----------
 
@@ -89,12 +89,15 @@ display(sourceDF)
 # COMMAND ----------
 
 # 5) Persist as parquet to raw zone
-dbutils.fs.rm(dbfsDestDirPath, recurse=True)
-sourceDF.coalesce(2).write.parquet(dbfsDestDirPath)
+dbutils.fs.rm(dbfs_dest_dir_path, recurse=True)
+sourceDF.coalesce(2).write.parquet(dbfs_dest_dir_path)
 
 # COMMAND ----------
 
-display(dbutils.fs.ls(dbfsDestDirPath))
+display(dbutils.fs.ls(dbfs_dest_dir_path))
+
+
+
 
 # COMMAND ----------
 
@@ -103,18 +106,32 @@ display(dbutils.fs.ls(dbfsDestDirPath))
 
 # COMMAND ----------
 
+from libs.dbname import dbname
+from libs.tblname import tblname
+crime = dblname(db="crime")
+print("4-read-write-primer.py:" + repr(112) + ":crime:" + repr(crime))
+spark.conf.set("nbvars.crime", crime)
+chicago_crimes_raw = tblname(db="crime", tbl="chicago_crimes_raw")
+print("4-read-write-primer.py:" + repr(114) + ":chicago_crimes_raw:" + repr(chicago_crimes_raw))
+spark.conf.set("nbvars.chicago_crimes_raw", chicago_crimes_raw)
+chicago_crimes_curated = tblname(db="crime", tbl="chicago_crimes_curated")
+print("4-read-write-primer.py:" + repr(114) + ":chicago_crimes_curated:" + repr(chicago_crimes_curated))
+spark.conf.set("nbvars.chicago_crimes_curated", chicago_crimes_curated)
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC
-# MAGIC CREATE DATABASE IF NOT EXISTS CRIMES_DB;
+# MAGIC CREATE DATABASE IF NOT EXISTS ${nbvars.crime};
 # MAGIC
-# MAGIC USE CRIMES_DB;
+# MAGIC USE ${nbvars.crime};
 # MAGIC
-# MAGIC DROP TABLE IF EXISTS chicago_crimes_raw;
-# MAGIC CREATE TABLE IF NOT EXISTS chicago_crimes_raw
+# MAGIC DROP TABLE IF EXISTS ${nbvars.chicago_crimes_raw};
+# MAGIC CREATE TABLE IF NOT EXISTS ${nbvars.chicago_crimes_raw}
 # MAGIC USING parquet
 # MAGIC OPTIONS (path "/mnt/workshop/raw/crimes/chicago-crimes");
 # MAGIC
-# MAGIC ANALYZE TABLE chicago_crimes_raw COMPUTE STATISTICS;
+# MAGIC ANALYZE TABLE ${nbvars.chicago_crimes_raw} COMPUTE STATISTICS;
 
 # COMMAND ----------
 
@@ -125,8 +142,8 @@ display(dbutils.fs.ls(dbfsDestDirPath))
 
 # MAGIC %sql
 # MAGIC USE crimes_db;
-# MAGIC --SELECT * FROM chicago_crimes_raw;
-# MAGIC SELECT count(*) FROM chicago_crimes_raw;
+# MAGIC --SELECT * FROM ${nbvars.chicago_crimes_raw};
+# MAGIC SELECT count(*) FROM ${nbvars.chicago_crimes_raw};
 # MAGIC
 # MAGIC --6,701,049
 
@@ -144,7 +161,7 @@ display(dbutils.fs.ls(dbfsDestDirPath))
 #from pyspark.sql.types import StructType, StructField, StringType, IntegerType,LongType,FloatType,DoubleType, TimestampType, DecimalType
 #from pyspark.sql.functions import to_timestamp, year, month, dayofmonth, udf
 
-def getDayNameFromWeekdayNbr(weekday):
+def get_day_name_from_weekday_nbr(weekday):
     if weekday == 0:
         return "Monday"
     if weekday == 1:
@@ -160,47 +177,51 @@ def getDayNameFromWeekdayNbr(weekday):
     if weekday == 6:
         return "Sunday"
 
-udf_getDayNameFromWeekdayNbr = udf(getDayNameFromWeekdayNbr, StringType())
+udf_get_day_name_from_weekday_nbr = udf(get_day_name_from_weekday_nbr, StringType())
 
-spark.sql("select * from crimes_db.chicago_crimes_raw").withColumn("case_timestamp",to_timestamp("case_dt_tm","MM/dd/yyyy hh:mm:ss")).createOrReplaceTempView("raw_crimes")
-curatedInitialDF = spark.sql("select *, month(case_timestamp) as case_month,dayofmonth(case_timestamp) as case_day_of_month, hour(case_timestamp) as case_hour, dayofweek(case_timestamp) as case_day_of_week_nbr from raw_crimes")
-curatedDF=curatedInitialDF.withColumn("case_day_of_week_name",udf_getDayNameFromWeekdayNbr("case_day_of_week_nbr"))
+# Temp view names are local to notebooks
+spark.sql(f"select * from {chicago_crimes_raw}").withColumn(
+    "case_timestamp",
+    to_timestamp("case_dt_tm","MM/dd/yyyy hh:mm:ss")).createOrReplaceTempView("raw_crimes")
+curated_initial_df = spark.sql("select *, month(case_timestamp) as case_month,dayofmonth(case_timestamp) as case_day_of_month, hour(case_timestamp) as case_hour, dayofweek(case_timestamp) as case_day_of_week_nbr from raw_crimes")
+curated_df = curated_initial_df.withColumn("case_day_of_week_name",
+                                           udf_get_day_name_from_weekday_nbr("case_day_of_week_nbr"))
 
-display(curatedDF)
+display(curated_df)
 
 
 # COMMAND ----------
 
 # 2) Persist as parquet to curated storage zone
-dbfsDestDirPath="/mnt/workshop/curated/crimes/chicago-crimes"
-dbutils.fs.rm(dbfsDestDirPath, recurse=True)
-curatedDF.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfsDestDirPath)
+dbfs_dest_dir_path = "/mnt/workshop/curated/crimes/chicago-crimes"
+dbutils.fs.rm(dbfs_dest_dir_path, recurse=True)
+curated_df.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfs_dest_dir_path)
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE DATABASE IF NOT EXISTS CRIMES_DB;
+# MAGIC CREATE DATABASE IF NOT EXISTS ${nbvars.crime};
 # MAGIC
-# MAGIC USE CRIMES_DB;
+# MAGIC USE ${nbvars.crime};
 # MAGIC
-# MAGIC DROP TABLE IF EXISTS chicago_crimes_curated;
-# MAGIC CREATE TABLE chicago_crimes_curated
+# MAGIC DROP TABLE IF EXISTS ${nbvars.chicago_crimes_curated};
+# MAGIC CREATE TABLE ${nbvars.chicago_crimes_curated}
 # MAGIC USING parquet
 # MAGIC OPTIONS (path "/mnt/workshop/curated/crimes/chicago-crimes");
 # MAGIC
-# MAGIC MSCK REPAIR TABLE chicago_crimes_curated;
-# MAGIC ANALYZE TABLE chicago_crimes_curated COMPUTE STATISTICS;
+# MAGIC MSCK REPAIR TABLE ${nbvars.chicago_crimes_curated};
+# MAGIC ANALYZE TABLE ${nbvars.chicago_crimes_curated} COMPUTE STATISTICS;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC describe formatted crimes_db.chicago_crimes_curated;
+# MAGIC describe formatted ${nbvars.chicago_crimes_curated};
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from crimes_db.chicago_crimes_curated;
-# MAGIC --select count(*) as crime_count from crimes_db.chicago_crimes_curated --where primary_type='THEFT';
+# MAGIC select * from ${nbvars.chicago_crimes_curated};
+# MAGIC --select count(*) as crime_count from ${nbvars.chicago_crimes_curated} --where primary_type='THEFT';
 
 # COMMAND ----------
 
@@ -211,30 +232,30 @@ curatedDF.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfsDe
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT case_year, count(*) AS crime_count FROM crimes_db.chicago_crimes_curated 
+# MAGIC SELECT case_year, count(*) AS crime_count FROM ${nbvars.chicago_crimes_curated}
 # MAGIC GROUP BY case_year ORDER BY case_year;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT cast(cast(case_year as string) as date) as case_year, primary_type as case_type, count(*) AS crime_count 
-# MAGIC FROM crimes_db.chicago_crimes_curated 
+# MAGIC SELECT cast(cast(case_year as string) as date) as case_year, primary_type as case_type, count(*) AS crime_count
+# MAGIC FROM ${nbvars.chicago_crimes_curated}
 # MAGIC where primary_type in ('BATTERY','ASSAULT','CRIMINAL SEXUAL ASSAULT')
 # MAGIC GROUP BY case_year,primary_type ORDER BY case_year;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select case_year,primary_type as case_type, count(*) as crimes_count 
-# MAGIC from crimes_db.chicago_crimes_curated 
-# MAGIC where (primary_type LIKE '%ASSAULT%' OR primary_type LIKE '%CHILD%') 
-# MAGIC GROUP BY case_year, case_type 
-# MAGIC ORDER BY case_year,case_type desc; 
+# MAGIC select case_year,primary_type as case_type, count(*) as crimes_count
+# MAGIC from ${nbvars.chicago_crimes_curated}
+# MAGIC where (primary_type LIKE '%ASSAULT%' OR primary_type LIKE '%CHILD%')
+# MAGIC GROUP BY case_year, case_type
+# MAGIC ORDER BY case_year,case_type desc;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select primary_type as case_type, count(*) as crimes_count 
-# MAGIC from crimes_db.chicago_crimes_curated 
-# MAGIC where (primary_type LIKE '%ASSAULT%' OR primary_type LIKE '%CHILD%') OR (primary_type='KIDNAPPING') 
-# MAGIC GROUP BY case_type; 
+# MAGIC select primary_type as case_type, count(*) as crimes_count
+# MAGIC from ${nbvars.chicago_crimes_curated}
+# MAGIC where (primary_type LIKE '%ASSAULT%' OR primary_type LIKE '%CHILD%') OR (primary_type='KIDNAPPING')
+# MAGIC GROUP BY case_type;
