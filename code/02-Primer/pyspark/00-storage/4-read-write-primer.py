@@ -34,6 +34,10 @@
 
 # COMMAND ----------
 
+from libs.dbname import dbname
+from libs.tblname import tblname, username
+uname = username()
+
 # 3) List to validate if file exists
 display(dbutils.fs.ls("file:/databricks/driver/chicago-crimes.csv"))
 
@@ -45,20 +49,20 @@ display(dbutils.fs.ls("file:/databricks/driver/chicago-crimes.csv"))
 # COMMAND ----------
 
 # 1) Create destination directory
-dbfsDirPath="/mnt/workshop/staging/crimes/chicago-crimes"
-dbutils.fs.rm(dbfsDirPath, recurse=True)
-dbutils.fs.mkdirs(dbfsDirPath)
+dbfs_dir_path = f"/mnt/workshop/users/{uname}/staging/crimes/chicago-crimes"
+dbutils.fs.rm(dbfs_dir_path, recurse=True)
+dbutils.fs.mkdirs(dbfs_dir_path)
 
 # COMMAND ----------
 
-# 2) Upload to from localDirPath to dbfsDirPath
-dbutils.fs.cp("file:/databricks/driver/chicago-crimes.csv", dbfsDirPath, recurse=True)
+# 2) Upload to from localDirPath to dbfs_dir_path
+dbutils.fs.cp("file:/databricks/driver/chicago-crimes.csv", dbfs_dir_path, recurse=True)
 
 # 3) Clean up local directory
 # dbutils.fs.rm(localFile)
 
-# 4) List dbfsDirPath
-display(dbutils.fs.ls(dbfsDirPath))
+# 4) List dbfs_dir_path
+display(dbutils.fs.ls(dbfs_dir_path))
 
 # COMMAND ----------
 
@@ -68,20 +72,20 @@ display(dbutils.fs.ls(dbfsDirPath))
 # COMMAND ----------
 
 # 1) Source directory
-dbfsSrcDirPath="/mnt/workshop/staging/crimes/chicago-crimes"
+dbfs_src_dir_path = f"/mnt/workshop/users/{uname}/staging/crimes/chicago-crimes"
 
 # 2) Destination directory
-dbfs_dest_dir_path = "/mnt/workshop/raw/crimes/chicago-crimes"
+dbfs_dest_dir_path_raw = f"/mnt/workshop/users/{uname}/raw/crimes/chicago-crimes"
 
 # COMMAND ----------
 
 # 3) Check first few lines
-dbutils.fs.head(dbfsSrcDirPath + "/chicago-crimes.csv")
+dbutils.fs.head(dbfs_src_dir_path + "/chicago-crimes.csv")
 
 # COMMAND ----------
 
 # 4)  Read raw CSV
-sourceDF = spark.read.format("csv").options(header='true', delimiter = ',').load(dbfsSrcDirPath).toDF("case_id", "case_nbr", "case_dt_tm", "block", "iucr", "primary_type", "description", "location_description", "arrest_made", "was_domestic", "beat", "district", "ward", "community_area", "fbi_code", "x_coordinate", "y_coordinate", "case_year", "updated_dt", "latitude", "longitude", "location_coords")
+sourceDF = spark.read.format("csv").options(header='true', delimiter = ',').load(dbfs_src_dir_path).toDF("case_id", "case_nbr", "case_dt_tm", "block", "iucr", "primary_type", "description", "location_description", "arrest_made", "was_domestic", "beat", "district", "ward", "community_area", "fbi_code", "x_coordinate", "y_coordinate", "case_year", "updated_dt", "latitude", "longitude", "location_coords")
 
 sourceDF.printSchema()
 display(sourceDF)
@@ -89,12 +93,12 @@ display(sourceDF)
 # COMMAND ----------
 
 # 5) Persist as parquet to raw zone
-dbutils.fs.rm(dbfs_dest_dir_path, recurse=True)
-sourceDF.coalesce(2).write.parquet(dbfs_dest_dir_path)
+dbutils.fs.rm(dbfs_dest_dir_path_raw, recurse=True)
+sourceDF.coalesce(2).write.parquet(dbfs_dest_dir_path_raw)
 
 # COMMAND ----------
 
-display(dbutils.fs.ls(dbfs_dest_dir_path))
+display(dbutils.fs.ls(dbfs_dest_dir_path_raw))
 
 
 
@@ -105,18 +109,16 @@ display(dbutils.fs.ls(dbfs_dest_dir_path))
 # MAGIC ### 4. Define external table
 
 # COMMAND ----------
-
-from libs.dbname import dbname
-from libs.tblname import tblname
 crime = dblname(db="crime")
-print("4-read-write-primer.py:" + repr(112) + ":crime:" + repr(crime))
+print("crime:" + repr(crime))
 spark.conf.set("nbvars.crime", crime)
 chicago_crimes_raw = tblname(db="crime", tbl="chicago_crimes_raw")
-print("4-read-write-primer.py:" + repr(114) + ":chicago_crimes_raw:" + repr(chicago_crimes_raw))
+print("chicago_crimes_raw:" + repr(chicago_crimes_raw))
 spark.conf.set("nbvars.chicago_crimes_raw", chicago_crimes_raw)
 chicago_crimes_curated = tblname(db="crime", tbl="chicago_crimes_curated")
-print("4-read-write-primer.py:" + repr(114) + ":chicago_crimes_curated:" + repr(chicago_crimes_curated))
+print("chicago_crimes_curated:" + repr(chicago_crimes_curated))
 spark.conf.set("nbvars.chicago_crimes_curated", chicago_crimes_curated)
+spark.conf.set("nbvars.dbfs_dest_dir_path_raw", dbfs_dest_dir_path_raw)
 
 # COMMAND ----------
 
@@ -129,7 +131,7 @@ spark.conf.set("nbvars.chicago_crimes_curated", chicago_crimes_curated)
 # MAGIC DROP TABLE IF EXISTS ${nbvars.chicago_crimes_raw};
 # MAGIC CREATE TABLE IF NOT EXISTS ${nbvars.chicago_crimes_raw}
 # MAGIC USING parquet
-# MAGIC OPTIONS (path "/mnt/workshop/raw/crimes/chicago-crimes");
+# MAGIC OPTIONS (path "${nbvars.dbfs_dest_dir_path_raw}");
 # MAGIC
 # MAGIC ANALYZE TABLE ${nbvars.chicago_crimes_raw} COMPUTE STATISTICS;
 
@@ -193,9 +195,12 @@ display(curated_df)
 # COMMAND ----------
 
 # 2) Persist as parquet to curated storage zone
-dbfs_dest_dir_path = "/mnt/workshop/curated/crimes/chicago-crimes"
-dbutils.fs.rm(dbfs_dest_dir_path, recurse=True)
-curated_df.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfs_dest_dir_path)
+dbfs_dest_dir_path_curated = f"/mnt/workshop/users/{uname}/curated/crimes/chicago-crimes"
+dbutils.fs.rm(dbfs_dest_dir_path_curated, recurse=True)
+curated_df.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfs_dest_dir_path_curated)
+
+spark.conf.set("nbvars.dbfs_dest_dir_path_curated", dbfs_dest_dir_path_curated)
+
 
 # COMMAND ----------
 
@@ -207,7 +212,7 @@ curated_df.coalesce(1).write.partitionBy("case_year","case_month").parquet(dbfs_
 # MAGIC DROP TABLE IF EXISTS ${nbvars.chicago_crimes_curated};
 # MAGIC CREATE TABLE ${nbvars.chicago_crimes_curated}
 # MAGIC USING parquet
-# MAGIC OPTIONS (path "/mnt/workshop/curated/crimes/chicago-crimes");
+# MAGIC OPTIONS (path "${nbvars.dbfs_dest_dir_path_curated}");
 # MAGIC
 # MAGIC MSCK REPAIR TABLE ${nbvars.chicago_crimes_curated};
 # MAGIC ANALYZE TABLE ${nbvars.chicago_crimes_curated} COMPUTE STATISTICS;

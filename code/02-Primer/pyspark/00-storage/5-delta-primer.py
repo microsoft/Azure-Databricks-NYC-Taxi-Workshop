@@ -15,11 +15,7 @@
 
 # COMMAND ----------
 
-spark.conf.set("spark.databricks.delta.preview.enabled", True) 
-
-# COMMAND ----------
-
-# MAGIC %md 
+# MAGIC %md
 # MAGIC ## 1.0. Basic create operation
 
 # COMMAND ----------
@@ -29,6 +25,10 @@ spark.conf.set("spark.databricks.delta.preview.enabled", True)
 
 # COMMAND ----------
 
+from libs.dbname import dbname
+from libs.tblname import tblname, username
+uname = username()
+
 columns = ["book_id", "book_author", "book_name", "book_pub_year"]
 vals = [
      ("b00001", "Arthur Conan Doyle", "A study in scarlet", 1887),
@@ -37,9 +37,9 @@ vals = [
      ("b00501", "Arthur Conan Doyle", "The memoirs of Sherlock Holmes", 1893),
      ("b00300", "Arthur Conan Doyle", "The hounds of Baskerville", 1901)
 ]
-booksDF = spark.createDataFrame(vals, columns)
-booksDF.printSchema
-display(booksDF)
+books_df = spark.createDataFrame(vals, columns)
+books_df.printSchema
+display(books_df)
 
 # COMMAND ----------
 
@@ -49,8 +49,8 @@ display(booksDF)
 # COMMAND ----------
 
 # Destination directory for Delta table
-deltaTableDirectory = "/mnt/workshop/curated/books"
-dbutils.fs.rm(deltaTableDirectory, recurse=True)
+delta_table_directory = f"/mnt/workshop/users/{uname}/curated/books"
+dbutils.fs.rm(delta_table_directory, recurse=True)
 
 # COMMAND ----------
 
@@ -60,7 +60,8 @@ dbutils.fs.rm(deltaTableDirectory, recurse=True)
 # COMMAND ----------
 
 # Persist dataframe to delta format without coalescing
-booksDF.write.format("delta").save(deltaTableDirectory)
+books_df.write.format("delta").save(delta_table_directory)
+spark.conf.set("nbvars.delta_table_directory", delta_table_directory)
 
 # COMMAND ----------
 
@@ -69,19 +70,27 @@ booksDF.write.format("delta").save(deltaTableDirectory)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC CREATE DATABASE IF NOT EXISTS books_db;
-# MAGIC
-# MAGIC USE books_db;
-# MAGIC DROP TABLE IF EXISTS books;
-# MAGIC CREATE TABLE books
-# MAGIC USING DELTA
-# MAGIC LOCATION "/mnt/workshop/curated/books";
+books_db = dblname(db="books")
+spark.conf.set("nbvars.books_db", books_db)
+books_tbl = tblname(db="books", tbl="books")
+print("books_tbl:" + repr(books_tbl))
+spark.conf.set("nbvars.books_tbl", books_tbl)
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from books_db.books;
+# MAGIC CREATE DATABASE IF NOT EXISTS ${nbvars.books_db};
+# MAGIC
+# MAGIC USE ${nbvars.books_db};
+# MAGIC DROP TABLE IF EXISTS ${nbvars.books_tbl};
+# MAGIC CREATE TABLE ${nbvars.books_tbl}
+# MAGIC USING DELTA
+# MAGIC LOCATION "${nbvars.delta_table_directory}";
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select * from ${nbvars.books_tbl};
 
 # COMMAND ----------
 
@@ -94,12 +103,12 @@ booksDF.write.format("delta").save(deltaTableDirectory)
 # COMMAND ----------
 
 # 1) Lets look at part file count, its 5
-display(dbutils.fs.ls("/mnt/workshop/curated/books"))
+display(dbutils.fs.ls(delta_table_directory))
 
 # COMMAND ----------
 
 # 2) Lets read the dataset and check the partition size, it should be the same as number of small files
-preDeltaOptimizeDF = spark.sql("select * from books_db.books")
+preDeltaOptimizeDF = spark.sql(f"select * from {books_tbl}")
 preDeltaOptimizeDF.rdd.getNumPartitions()
 
 # COMMAND ----------
@@ -124,12 +133,12 @@ preDeltaOptimizeDF.rdd.getNumPartitions()
 
 # 6) Lets look at the part file count, its 6 now!
 # Guess why?
-display(dbutils.fs.ls("/mnt/workshop/curated/books"))
+display(dbutils.fs.ls(delta_table_directory))
 
 # COMMAND ----------
 
 #7) Lets read the dataset and check the partition size, it should be the same as number of small files
-postDeltaOptimizeDF = spark.sql("select * from books_db.books")
+postDeltaOptimizeDF = spark.sql(f"select * from {books_tbl}")
 postDeltaOptimizeDF.rdd.getNumPartitions()
 #Its 1, and not 6
 #Guess why?
@@ -149,7 +158,7 @@ postDeltaOptimizeDF.rdd.getNumPartitions()
 # COMMAND ----------
 
 # 9) Lets look at the part file count, its 1 now!
-display(dbutils.fs.ls("/mnt/workshop/curated/books"))
+display(dbutils.fs.ls(delta_table_directory))
 
 # COMMAND ----------
 
@@ -175,13 +184,13 @@ vals = [
      ("b00909", "Arthur Conan Doyle", "A scandal in Bohemia", 1891),
      ("b00023", "Arthur Conan Doyle", "Playing with Fire", 1900)
 ]
-booksDF = spark.createDataFrame(vals, columns)
-booksDF.printSchema
-display(booksDF)
+books_df = spark.createDataFrame(vals, columns)
+books_df.printSchema
+display(books_df)
 
 # COMMAND ----------
 
-booksDF.write.format("delta").mode("append").save(deltaTableDirectory)
+books_df.write.format("delta").mode("append").save(delta_table_directory)
 
 # COMMAND ----------
 
@@ -267,7 +276,7 @@ booksUpsertDF.createOrReplaceTempView("books_upserts")
 # COMMAND ----------
 
 # 5) Files? How many?
-display(dbutils.fs.ls("/mnt/workshop/curated/books"))
+display(dbutils.fs.ls(delta_table_directory))
 
 # COMMAND ----------
 
@@ -344,7 +353,7 @@ display(booksOverwriteDF)
 # COMMAND ----------
 
 # 2) Overwrite the table
-booksOverwriteDF.write.format("delta").mode("overwrite").save("/mnt/workshop/curated/books")
+booksOverwriteDF.write.format("delta").mode("overwrite").save(delta_table_directory)
 
 # COMMAND ----------
 
@@ -376,7 +385,7 @@ display(booksNewColDF)
 
 # COMMAND ----------
 
-booksNewColDF.write.format("delta").option("mergeSchema", "true").mode("overwrite").save("/mnt/workshop/curated/books")
+booksNewColDF.write.format("delta").option("mergeSchema", "true").mode("overwrite").save(delta_table_directory)
 
 # COMMAND ----------
 
@@ -411,36 +420,42 @@ vals = [
         ("d09933", "Jules Verne", "The return of Sherlock Holmes", 1870, 3.33),
         ("f09945", "Jules Verne", "Around the World in Eighty Days", 1873, 4.44)
 ]
-booksPartitionedDF = spark.createDataFrame(vals, columns)
-booksPartitionedDF.printSchema
-display(booksPartitionedDF)
+books_partitioned_df = spark.createDataFrame(vals, columns)
+books_partitioned_df.printSchema
+display(books_partitioned_df)
 
 # COMMAND ----------
 
 # 2) Persist
-dbutils.fs.rm("/mnt/workshop/curated/delta/books-part", recurse=True)
-booksPartitionedDF.write.format("delta").partitionBy("book_author").save("/mnt/workshop/curated/delta/books-part")
+books_part_path = f"/mnt/workshop/users/{uname}/curated/delta/books-part"
+
+dbutils.fs.rm(books_part_path, recurse=True)
+books_partitioned_df.write.format("delta").partitionBy("book_author").save(books_part_path)
+
+books_tbl_part = tblname(db="books", tbl="books_part")
+print("books_tbl_part:" + repr(books_tbl_part))
+spark.conf.set("nbvars.books_tbl_part", books_tbl_part)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- 3) Create table
-# MAGIC USE books_db;
-# MAGIC DROP TABLE IF EXISTS books_part;
-# MAGIC CREATE TABLE books_part
+# MAGIC USE ${nbvars.books_db};
+# MAGIC DROP TABLE IF EXISTS ${nbvars.books_tbl_part};
+# MAGIC CREATE TABLE ${nbvars.books_tbl_part}
 # MAGIC USING DELTA
-# MAGIC LOCATION "/mnt/workshop/curated/delta/books-part";
+# MAGIC LOCATION "${nbvars.books_part_path}";
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC -- 4) Seamless
-# MAGIC select * from books_db.books_part;
+# MAGIC select * from ${nbvars.books_tbl_part};
 
 # COMMAND ----------
 
 # 5) Is it really partitioned?
-display(dbutils.fs.ls("/mnt/workshop/curated/delta/books-part"))
+display(dbutils.fs.ls(books_part_path))
 
 # COMMAND ----------
 
@@ -455,7 +470,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/delta/books-part"))
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC DESCRIBE HISTORY books_db.books;
+# MAGIC DESCRIBE HISTORY ${nbvars.books_tbl};
 
 # COMMAND ----------
 
