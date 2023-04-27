@@ -17,8 +17,15 @@
 
 # COMMAND ----------
 
+from libs.dbname import dbname
+taxi_db = dbname(db="taxi_db")
+print("New db name: " + taxi_db)
+spark.conf.set("nbvars.taxi_db", taxi_db)
+
+# COMMAND ----------
+
 # MAGIC %sql
-# MAGIC CREATE DATABASE IF NOT EXISTS taxi_db;
+# MAGIC CREATE DATABASE IF NOT EXISTS ${nbvars.taxi_db};
 
 # COMMAND ----------
 
