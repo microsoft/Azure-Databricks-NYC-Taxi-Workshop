@@ -2,22 +2,14 @@
 # MAGIC %md
 # MAGIC # Mount blob storage
 # MAGIC
-# MAGIC Mounting blob storage containers in Azure Databricks allows you to access blob storage containers like they are directories.<BR>
-# MAGIC   
-# MAGIC ### What's in this exercise?
-# MAGIC You will mount storage account containers required for the workshop primer section.
+# MAGIC We assume /mnt has already been mounted as s3 storage.
+# MAGIC
+# MAGIC This notebooks needs only to be run by the workshop organizer 
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### 1. Define credentials
-# MAGIC To mount blob storage - we need storage credentials - storage account name and storage account key
-
-# COMMAND ----------
-
-# Replace with your storage account name
-storageAccountName = "gwsblobsa"
-storageAccountAccessKey = dbutils.secrets.get(scope = "gws-blob-storage", key = "storage-acct-key")
+# MAGIC ### 1. Make root
 
 # COMMAND ----------
 
@@ -55,33 +47,33 @@ dbutils.fs.mount(
 
 # COMMAND ----------
 
-# This is a function to mount a storage container
-def mountStorageContainer(storageAccount, storageAccountKey, storageContainer, blobMountPoint):
-  try:
-    print("Mounting {0} to {1}:".format(storageContainer, blobMountPoint))
-    # Unmount the storage container if already mounted
-    dbutils.fs.unmount(blobMountPoint)
-  except Exception as e:
-    # If this errors, safe to assume that the container is not mounted
-    print("....Container is not mounted; Attempting mounting now..")
+# # This is a function to mount a storage container
+# def mountStorageContainer(storageAccount, storageAccountKey, storageContainer, blobMountPoint):
+#   try:
+#     print("Mounting {0} to {1}:".format(storageContainer, blobMountPoint))
+#     # Unmount the storage container if already mounted
+#     dbutils.fs.unmount(blobMountPoint)
+#   except Exception as e:
+#     # If this errors, safe to assume that the container is not mounted
+#     print("....Container is not mounted; Attempting mounting now..")
     
-  # Mount the storage container
-  mountStatus = dbutils.fs.mount(
-                  source = "wasbs://{0}@{1}.blob.core.windows.net/".format(storageContainer, storageAccount),
-                  mount_point = blobMountPoint,
-                  extra_configs = {"fs.azure.account.key.{0}.blob.core.windows.net".format(storageAccount): storageAccountKey})
+#   # Mount the storage container
+#   mountStatus = dbutils.fs.mount(
+#                   source = "wasbs://{0}@{1}.blob.core.windows.net/".format(storageContainer, storageAccount),
+#                   mount_point = blobMountPoint,
+#                   extra_configs = {"fs.azure.account.key.{0}.blob.core.windows.net".format(storageAccount): storageAccountKey})
 
-  print("....Status of mount is: " + str(mountStatus))
-  print() # Provide a blank line between mounts
+#   print("....Status of mount is: " + str(mountStatus))
+#   print() # Provide a blank line between mounts
 
 # COMMAND ----------
 
-# Mount the various storage containers created
-mountStorageContainer(storageAccountName,storageAccountAccessKey,"scratch","/mnt/workshop/scratch")
-mountStorageContainer(storageAccountName,storageAccountAccessKey,"staging","/mnt/workshop/staging")
-mountStorageContainer(storageAccountName,storageAccountAccessKey,"raw","/mnt/workshop/raw")
-mountStorageContainer(storageAccountName,storageAccountAccessKey,"curated","/mnt/workshop/curated")
-mountStorageContainer(storageAccountName,storageAccountAccessKey,"consumption","/mnt/workshop/consumption")
+# # Mount the various storage containers created
+# mountStorageContainer(storageAccountName,storageAccountAccessKey,"scratch","/mnt/workshop/scratch")
+# mountStorageContainer(storageAccountName,storageAccountAccessKey,"staging","/mnt/workshop/staging")
+# mountStorageContainer(storageAccountName,storageAccountAccessKey,"raw","/mnt/workshop/raw")
+# mountStorageContainer(storageAccountName,storageAccountAccessKey,"curated","/mnt/workshop/curated")
+# mountStorageContainer(storageAccountName,storageAccountAccessKey,"consumption","/mnt/workshop/consumption")
 
 # COMMAND ----------
 

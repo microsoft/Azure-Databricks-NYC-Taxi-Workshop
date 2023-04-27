@@ -1,6 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # What's in this exercise?
+# MAGIC # NB Only the workshop admin should run this!
+# MAGIC
+# MAGIC ## What's in this exercise?
 # MAGIC We run the common functions notebook so we can reuse capability defined there, and then...<BR>
 # MAGIC 1) Load reference data in staging directory to reference data directory<BR> 
 # MAGIC 2) Create external unmanaged Hive tables<BR>
@@ -14,7 +16,44 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType,L
 
 # Define source and destination directories
 srcDataDirRoot = "/mnt/workshop/staging/reference-data/" #Root dir for source data
+# srcDataDirRoot = "dbfs:/databricks-datasets/nyctaxi/reference/" #Root dir for source data
 destDataDirRoot = "/mnt/workshop/curated/nyctaxi/reference/" #Root dir for consumable data
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### 0. Add staging data
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC mkdir -p /mnt/workshop/staging/reference-data/
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC # 1) Download dataset - gets downloaded to driver
+# MAGIC mkdir -p /tmp/reference
+# MAGIC # Fond taxi_zone_lookup.csv elsewhere. But MS data s
+# MAGIC wget -O /tmp/reference/taxi_zone_lookup.csv "https://s3.amazonaws.com/nyc-tlc/misc/taxi+_zone_lookup.csv"
+# MAGIC
+# MAGIC # MS has hidden the following datasets. 
+# MAGIC # Let's hope they are not needed. https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop/issues/12
+# MAGIC # loadReferenceData("trip month",srcDataDirRoot + "trip_month_lookup.csv",destDataDirRoot + "trip-month",tripMonthNameSchema,",")
+# MAGIC # loadReferenceData("rate code",srcDataDirRoot + "rate_code_lookup.csv",destDataDirRoot + "rate-code",rateCodeSchema,"|")
+# MAGIC # loadReferenceData("payment type",srcDataDirRoot + "payment_type_lookup.csv",destDataDirRoot + "payment-type",paymentTypeSchema,"|")
+# MAGIC # loadReferenceData("trip type",srcDataDirRoot + "trip_type_lookup.csv",destDataDirRoot + "trip-type",tripTypeSchema,"|")
+# MAGIC # loadReferenceData("vendor",srcDataDirRoot + "vendor_lookup.csv",destDataDirRoot + "vendor",vendorSchema,"|")
+
+# COMMAND ----------
+
+# MAGIC %sh
+# MAGIC head -n 2 /tmp/reference/taxi_zone_lookup.csv
+
+# COMMAND ----------
+
+dbutils.fs.cp("file:///tmp/reference/taxi_zone_lookup.csv", f"{srcDataDirRoot}/taxi_zone_lookup.csv")
+display(dbutils.fs.ls(f"{srcDataDirRoot}/taxi_zone_lookup.csv"))
 
 # COMMAND ----------
 
@@ -32,7 +71,8 @@ destDataDirRoot = "/mnt/workshop/curated/nyctaxi/reference/" #Root dir for consu
 
 # COMMAND ----------
 
-display(dbutils.fs.ls(srcDataDirRoot))
+# %fs
+# ls dbfs:/databricks-datasets/nyctaxi/tripdata/yellow
 
 # COMMAND ----------
 
@@ -121,11 +161,11 @@ def loadReferenceData(srcDatasetName, srcDataFile, destDataDir, srcSchema, delim
 # COMMAND ----------
 
 loadReferenceData("taxi zone",srcDataDirRoot + "taxi_zone_lookup.csv",destDataDirRoot + "taxi-zone",taxiZoneSchema,",")
-loadReferenceData("trip month",srcDataDirRoot + "trip_month_lookup.csv",destDataDirRoot + "trip-month",tripMonthNameSchema,",")
-loadReferenceData("rate code",srcDataDirRoot + "rate_code_lookup.csv",destDataDirRoot + "rate-code",rateCodeSchema,"|")
-loadReferenceData("payment type",srcDataDirRoot + "payment_type_lookup.csv",destDataDirRoot + "payment-type",paymentTypeSchema,"|")
-loadReferenceData("trip type",srcDataDirRoot + "trip_type_lookup.csv",destDataDirRoot + "trip-type",tripTypeSchema,"|")
-loadReferenceData("vendor",srcDataDirRoot + "vendor_lookup.csv",destDataDirRoot + "vendor",vendorSchema,"|")
+# loadReferenceData("trip month",srcDataDirRoot + "trip_month_lookup.csv",destDataDirRoot + "trip-month",tripMonthNameSchema,",")
+# loadReferenceData("rate code",srcDataDirRoot + "rate_code_lookup.csv",destDataDirRoot + "rate-code",rateCodeSchema,"|")
+# loadReferenceData("payment type",srcDataDirRoot + "payment_type_lookup.csv",destDataDirRoot + "payment-type",paymentTypeSchema,"|")
+# loadReferenceData("trip type",srcDataDirRoot + "trip_type_lookup.csv",destDataDirRoot + "trip-type",tripTypeSchema,"|")
+# loadReferenceData("vendor",srcDataDirRoot + "vendor_lookup.csv",destDataDirRoot + "vendor",vendorSchema,"|")
 
 # COMMAND ----------
 
@@ -153,7 +193,7 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 # MAGIC service_zone STRING)
 # MAGIC USING parquet
 # MAGIC LOCATION '/mnt/workshop/curated/nyctaxi/reference/taxi-zone/';
-# MAGIC 
+# MAGIC
 # MAGIC ANALYZE TABLE taxi_zone_lookup COMPUTE STATISTICS;
 
 # COMMAND ----------
@@ -163,93 +203,93 @@ display(dbutils.fs.ls("/mnt/workshop/curated/nyctaxi/reference"))
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC use taxi_db;
-# MAGIC DROP TABLE IF EXISTS trip_month_lookup;
-# MAGIC CREATE TABLE IF NOT EXISTS trip_month_lookup(
-# MAGIC trip_month STRING,
-# MAGIC month_name_short STRING,
-# MAGIC month_name_full STRING)
-# MAGIC USING parquet
-# MAGIC LOCATION '/mnt/workshop/curated/nyctaxi/reference/trip-month/';
-# MAGIC 
-# MAGIC ANALYZE TABLE trip_month_lookup COMPUTE STATISTICS;
+# %sql
+# use taxi_db;
+# DROP TABLE IF EXISTS trip_month_lookup;
+# CREATE TABLE IF NOT EXISTS trip_month_lookup(
+# trip_month STRING,
+# month_name_short STRING,
+# month_name_full STRING)
+# USING parquet
+# LOCATION '/mnt/workshop/curated/nyctaxi/reference/trip-month/';
+
+# ANALYZE TABLE trip_month_lookup COMPUTE STATISTICS;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from taxi_db.trip_month_lookup;
+# %sql
+# select * from taxi_db.trip_month_lookup;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC use taxi_db;
-# MAGIC DROP TABLE IF EXISTS rate_code_lookup;
-# MAGIC CREATE TABLE IF NOT EXISTS rate_code_lookup(
-# MAGIC rate_code_id INT,
-# MAGIC description STRING)
-# MAGIC USING parquet
-# MAGIC LOCATION '/mnt/workshop/curated/nyctaxi/reference/rate-code/';
-# MAGIC 
-# MAGIC ANALYZE TABLE rate_code_lookup COMPUTE STATISTICS;
+# %sql
+# use taxi_db;
+# DROP TABLE IF EXISTS rate_code_lookup;
+# CREATE TABLE IF NOT EXISTS rate_code_lookup(
+# rate_code_id INT,
+# description STRING)
+# USING parquet
+# LOCATION '/mnt/workshop/curated/nyctaxi/reference/rate-code/';
+
+# ANALYZE TABLE rate_code_lookup COMPUTE STATISTICS;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from taxi_db.rate_code_lookup;
+# %sql
+# select * from taxi_db.rate_code_lookup;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC use taxi_db;
-# MAGIC DROP TABLE IF EXISTS payment_type_lookup;
-# MAGIC CREATE TABLE IF NOT EXISTS payment_type_lookup(
-# MAGIC payment_type INT,
-# MAGIC abbreviation STRING,
-# MAGIC description STRING)
-# MAGIC USING parquet
-# MAGIC LOCATION '/mnt/workshop/curated/nyctaxi/reference/payment-type/';
-# MAGIC 
-# MAGIC ANALYZE TABLE payment_type_lookup COMPUTE STATISTICS;
+# %sql
+# use taxi_db;
+# DROP TABLE IF EXISTS payment_type_lookup;
+# CREATE TABLE IF NOT EXISTS payment_type_lookup(
+# payment_type INT,
+# abbreviation STRING,
+# description STRING)
+# USING parquet
+# LOCATION '/mnt/workshop/curated/nyctaxi/reference/payment-type/';
+
+# ANALYZE TABLE payment_type_lookup COMPUTE STATISTICS;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from taxi_db.payment_type_lookup;
+# %sql
+# select * from taxi_db.payment_type_lookup;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC use taxi_db;
-# MAGIC DROP TABLE IF EXISTS trip_type_lookup;
-# MAGIC CREATE TABLE IF NOT EXISTS trip_type_lookup(
-# MAGIC trip_type INT,
-# MAGIC description STRING)
-# MAGIC USING parquet
-# MAGIC LOCATION '/mnt/workshop/curated/nyctaxi/reference/trip-type/';
-# MAGIC 
-# MAGIC ANALYZE TABLE trip_type_lookup COMPUTE STATISTICS;
+# %sql
+# use taxi_db;
+# DROP TABLE IF EXISTS trip_type_lookup;
+# CREATE TABLE IF NOT EXISTS trip_type_lookup(
+# trip_type INT,
+# description STRING)
+# USING parquet
+# LOCATION '/mnt/workshop/curated/nyctaxi/reference/trip-type/';
+
+# ANALYZE TABLE trip_type_lookup COMPUTE STATISTICS;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from taxi_db.trip_type_lookup;
+# %sql
+# select * from taxi_db.trip_type_lookup;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC use taxi_db;
-# MAGIC DROP TABLE IF EXISTS vendor_lookup;
-# MAGIC CREATE TABLE IF NOT EXISTS vendor_lookup(
-# MAGIC vendor_id INT,
-# MAGIC abbreviation STRING,
-# MAGIC description STRING)
-# MAGIC USING parquet
-# MAGIC LOCATION '/mnt/workshop/curated/nyctaxi/reference/vendor/';
-# MAGIC 
-# MAGIC ANALYZE TABLE vendor_lookup COMPUTE STATISTICS;
+# %sql
+# use taxi_db;
+# DROP TABLE IF EXISTS vendor_lookup;
+# CREATE TABLE IF NOT EXISTS vendor_lookup(
+# vendor_id INT,
+# abbreviation STRING,
+# description STRING)
+# USING parquet
+# LOCATION '/mnt/workshop/curated/nyctaxi/reference/vendor/';
+
+# ANALYZE TABLE vendor_lookup COMPUTE STATISTICS;
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from taxi_db.vendor_lookup;
+# %sql
+# select * from taxi_db.vendor_lookup;
