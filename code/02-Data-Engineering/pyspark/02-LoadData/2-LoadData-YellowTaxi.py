@@ -12,8 +12,18 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType,L
 
 # COMMAND ----------
 
+display(dbutils.fs.ls("dbfs:/databricks-datasets/nyctaxi/"))
+
+# COMMAND ----------
+
+# MAGIC %fs
+# MAGIC ls dbfs:/databricks-datasets/nyctaxi/tripdata/yellow/
+
+# COMMAND ----------
+
 #Source, destination directories
-srcDataDirRoot = "/mnt/workshop/staging/transactional-data/" 
+# srcDataDirRoot = "/mnt/workshop/staging/transactional-data/" 
+srcDataDirRoot = "/databricks-datasets/nyctaxi/tripdata/yellow/" 
 destDataDirRoot = "/mnt/workshop/raw/nyctaxi/transactions/yellow-taxi/" 
 
 #Canonical ordered column list for yellow taxi across years to homogenize schema
@@ -236,7 +246,7 @@ dbutils.fs.rm(destDataDirRoot,recurse=True)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC use taxi_db;
+# MAGIC use nyctaxi_reference_data;
 # MAGIC DROP TABLE IF EXISTS yellow_taxi_trips_raw;
 
 # COMMAND ----------
@@ -249,7 +259,8 @@ for j in range(2016,2018):
   else: endMonth = 12 
   for i in range(1,endMonth+1):
     
-    srcDataFile= "{}year={}/month={:02d}/type=yellow/yellow_tripdata_{}-{:02d}.csv".format(srcDataDirRoot,j,i,j,i)
+    srcDataFile= "{}yellow_tripdata_{}-{:02d}.csv.gz".format(srcDataDirRoot,j,i,j,i)
+    # srcDataFile= "{}year={}/month={:02d}/type=yellow/yellow_tripdata_{}-{:02d}.csv".format(srcDataDirRoot,j,i,j,i)
     print("Year={}; Month={}".format(j,i))
     print(srcDataFile)
 
@@ -277,13 +288,19 @@ for j in range(2016,2018):
 
 # COMMAND ----------
 
+# %fs
+# ls /databricks-datasets/nyctaxi/tripdata/yellow/yellow_tripdata_2009-01.csv.gz
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #### 5. Create external table
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC use taxi_db;
+# MAGIC create schema taxinyc_trips;
+# MAGIC use taxinyc_trips;
 # MAGIC DROP TABLE IF EXISTS yellow_taxi_trips_raw;
 # MAGIC CREATE TABLE IF NOT EXISTS yellow_taxi_trips_raw
 # MAGIC USING DELTA
@@ -292,9 +309,9 @@ for j in range(2016,2018):
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from taxi_db.yellow_taxi_trips_raw;
+# MAGIC select * from taxinyc_trips.yellow_taxi_trips_raw;
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select count(*) from from taxi_db.yellow_taxi_trips_raw;
+# MAGIC select count(*) from from taxinyc_trips.yellow_taxi_trips_raw;
